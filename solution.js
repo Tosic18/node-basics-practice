@@ -1,24 +1,38 @@
 const http = require('http');
 
-// Отримуємо порт з аргументів командного рядка (як просить інструкція Debug)
+// Порт беремо з аргументів або ставимо 3000 за замовчуванням
 const port = process.argv[2] || 3000;
 
 const server = http.createServer((req, res) => {
-  // Перевіряємо шлях '/' та метод 'GET'
-  if (req.url === '/' && req.method === 'GET') {
-    // 1. Встановлюємо статус код 200
-    // 2. Встановлюємо заголовок Content-Type
+  const { method, url } = req;
+
+  // Вправа 4.1: Головна сторінка (Текст)
+  if (method === 'GET' && url === '/') {
     res.writeHead(200, { 'Content-Type': 'text/plain' });
+    return res.end('Welcome to Manual HTTP Router');
+  }
+
+  // Вправа 4.2: TIME ROUTE (JSON)
+  else if (method === 'GET' && url === '/time') {
+    // 1. Встановлюємо заголовок для JSON
+    res.writeHead(200, { 'Content-Type': 'application/json' });
     
-    // 3. Надсилаємо текст
-    res.end('Welcome to Manual HTTP Router');
-  } else {
-    // Для інших шляхів повертаємо 404 (це хороший тон)
+    // 2. Створюємо об'єкт з часом
+    const responseData = {
+      now: new Date().toISOString()
+    };
+    
+    // 3. Перетворюємо об'єкт у рядок JSON і відправляємо
+    return res.end(JSON.stringify(responseData));
+  }
+
+  // Якщо шлях не знайдено
+  else {
     res.writeHead(404);
     res.end('Not Found');
   }
 });
 
 server.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
+  console.log(`Server running on port ${port}`);
 });
