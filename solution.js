@@ -1,38 +1,37 @@
 const http = require('http');
 
-// Порт беремо з аргументів або ставимо 3000 за замовчуванням
 const port = process.argv[2] || 3000;
 
 const server = http.createServer((req, res) => {
-  const { method, url } = req;
+  // Використовуємо modern URL API згідно з підказкою
+  const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+  const path = url.pathname;
 
-  // Вправа 4.1: Головна сторінка (Текст)
-  if (method === 'GET' && url === '/') {
+  // [4.1] ROOT ROUTE
+  if (req.method === 'GET' && path === '/') {
     res.writeHead(200, { 'Content-Type': 'text/plain' });
     return res.end('Welcome to Manual HTTP Router');
   }
 
-  // Вправа 4.2: TIME ROUTE (JSON)
-  else if (method === 'GET' && url === '/time') {
-    // 1. Встановлюємо заголовок для JSON
+  // [4.2] TIME ROUTE
+  else if (req.method === 'GET' && path === '/time') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
-    
-    // 2. Створюємо об'єкт з часом
-    const responseData = {
-      now: new Date().toISOString()
-    };
-    
-    // 3. Перетворюємо об'єкт у рядок JSON і відправляємо
-    return res.end(JSON.stringify(responseData));
+    return res.end(JSON.stringify({ now: new Date().toISOString() }));
   }
 
-  // Якщо шлях не знайдено
+  // [4.3] ECHO ROUTE (Виправлено згідно з image_ac2dfc.png)
+  else if (req.method === 'GET' && path === '/echo') {
+    // Воркшоп хоче параметр "msg", а не "message"
+    const msg = url.searchParams.get("msg") || "";
+    res.writeHead(200, { 'Content-Type': 'text/plain' });
+    return res.end(msg);
+  }
+
+  // 404
   else {
-    res.writeHead(404);
+    res.writeHead(404, { 'Content-Type': 'text/plain' });
     res.end('Not Found');
   }
 });
 
-server.listen(port, () => {
-  console.log(`Server running on port ${port}`);
-});
+server.listen(port);
